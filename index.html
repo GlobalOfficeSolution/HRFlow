@@ -162,7 +162,7 @@ async function submitRequest(){
   sig:document.getElementById('signature').toDataURL('image/png'),days:cuti?(parseInt(d.totalDays)||0):0,hours:(!cuti&&hm)?(+hm[1]+(+hm[2])/60):0};
  const pfile=pf&&pf.files&&pf.files[0];
  if(pfile){const nb=document.getElementById('nextBtn');if(nb)nb.disabled=true;const du=await compressImage(pfile);
-  if(du&&IMGBB_KEY){try{r.proofUrl=await uploadImgbb(du,r.id)}catch(err){console.error('ImgBB',err);r.proofImg=du;toast('Upload ke ImgBB gagal, foto disimpan langsung di database.')}}
+  if(du&&IMGBB_KEY){try{r.proofUrl=await uploadImgbb(du,r.id);r.proofImg=await compressImage(pfile,640,0.5)}catch(err){console.error('ImgBB',err);r.proofImg=du;toast('Upload ke ImgBB gagal, foto disimpan langsung di database.')}}
   else r.proofImg=du;
   if(nb)nb.disabled=false}
  if(CLOUD){if(!cloud.uid){toast('Belum terhubung ke server. Coba lagi sebentar.');return}r.ownerUid=cloud.uid;
@@ -272,6 +272,8 @@ function showDetail(id){
  const bg=document.createElement('div');bg.className='modal-bg';bg.onclick=ev=>{if(ev.target===bg)bg.remove()};
  bg.innerHTML=`<div class="modal" role="dialog" aria-label="Detail pengajuan"><h3>Detail ${esc(r.id)}</h3>${kv('Karyawan',esc(r.nama)+' ('+esc(r.nik)+')')}${kv('Divisi',esc(r.divisi))}${kv('Jenis',esc(r.type)+(r.sub?' · '+esc(r.sub):''))}${kv('Tanggal / Jam',esc(r.date))}${kv('Total',esc(totalStr(r)))}${kv('Alasan / Pekerjaan',esc(r.reason))}${kv('Diisi pada',tglS(r.at)+' pukul '+jamS(r.at))}${kv('Foto bukti',(r.proofUrl||r.proofImg)?'<img class="proofimg" alt="Foto bukti" referrerpolicy="no-referrer" src="'+esc(r.proofUrl||r.proofImg)+'" onclick="viewImg(this.src)"><div class="hint">'+esc(r.proofName||'')+'</div>'+(r.proofUrl?'<a class="hint" href="'+esc(r.proofUrl)+'" target="_blank" rel="noopener">Buka foto di tab baru</a>':'<a class="hint" href="'+r.proofImg+'" download="bukti-'+esc(r.id)+'.jpg">⬇ Unduh foto</a>')+' · <span class="hint">klik gambar untuk memperbesar</span>':(r.proof?'Dilampirkan, tetapi gambar tidak tersimpan (data contoh)':'Tidak dilampirkan'))}${kv('Status',statTag(r.status))}${r.note?kv('Catatan HRD',esc(r.note)):''}${r.decidedAt?kv('Diputuskan',tglS(r.decidedAt)+' '+jamS(r.decidedAt)+' oleh '+esc(r.decidedBy||'-')):''}<div style="margin-top:12px"><b style="font-size:14px">Tanda tangan digital</b><div style="margin-top:6px">${r.sig?'<img class="sigimg" alt="Tanda tangan" src="'+r.sig+'">':'<span class="hint">Tidak tersedia (data contoh).</span>'}</div></div><div style="margin-top:16px;text-align:right"><button class="btn primary" id="closeModal">Tutup</button></div></div>`;
  document.body.appendChild(bg);bg.querySelector('#closeModal').onclick=()=>bg.remove();
+ const im=bg.querySelector('.proofimg');
+ if(im&&r.proofUrl)im.onerror=()=>{im.onerror=null;if(r.proofImg){im.src=r.proofImg;const h=document.createElement('div');h.className='hint';h.textContent='Versi ringkas ditampilkan karena ImgBB tidak bisa dibuka dari jaringan ini.';im.after(h)}else{im.outerHTML='<span class="tag red">Foto tidak bisa dimuat. Jaringan mungkin memblokir i.ibb.co. Coba ganti DNS/VPN.</span>'}};
 }
 function aktivitasTab(){
  const rows=activity.slice(0,150);
