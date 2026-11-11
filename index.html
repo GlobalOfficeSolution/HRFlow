@@ -35,15 +35,15 @@ const LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABOYAAATmCAYAAACF/K4qAA
 const employees=[{nik:'202401028',nama:'Nadia Putri',divisi:'People & Culture',sisa:12,aktif:true},{nik:'202301005',nama:'Raka Pratama',divisi:'Produksi',sisa:8,aktif:true},{nik:'202205014',nama:'Dewi Anggraini',divisi:'Finance',sisa:10,aktif:true},{nik:'202302019',nama:'Bagas Santoso',divisi:'Procurement',sisa:6,aktif:true},{nik:'202403007',nama:'Salsa Maharani',divisi:'Humas',sisa:12,aktif:true},{nik:'202106003',nama:'Fajar Nugroho',divisi:'Produksi',sisa:4,aktif:true},{nik:'202304022',nama:'Intan Permata',divisi:'Finance',sisa:9,aktif:true},{nik:'202208011',nama:'Yoga Wijaya',divisi:'Gudang',sisa:11,aktif:true}];
 let demoUser=employees[0];
 let route='beranda',loggedIn=false,hrLogged=false,step=0,formType='cuti',requests=[],draft={},hrName='',hrTab='antrean',hrFilter='Semua',hrMonth='2026-10',activity=[],hrLog=[];
-const navItems=[['beranda','Beranda'],['ajukan-cuti','Ajukan Cuti'],['ajukan-lembur','Ajukan Lembur'],['status','Status'],['kalender-tim','Kalender Tim'],['panduan','Panduan']];
+const navItems=[['beranda','Beranda'],['ajukan-cuti','Ajukan Cuti'],['ajukan-lembur','Ajukan Lembur'],['status','Status'],['surat','Pemberitahuan'],['kalender-tim','Kalender Tim'],['panduan','Panduan']];
 function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.style.display='none',Math.max(3000,s.length*70))}
 function go(r){if(hrLogged&&r.indexOf('ruang-kendali')!==0){logHr('Keluar dari Ruang Kendali');hrLogged=false;hrName='';clearTimeout(hrTimer);hrDetach()}if(r==='ruang-kendali'&&hrLogged)r='ruang-kendali-dashboard';route=r;step=0;if(r==='ajukan-cuti'||r==='ajukan-lembur'){draft={};logAct('Membuka formulir '+(r==='ajukan-cuti'?'cuti':'lembur'))}render()}
-function renderNav(){const el=document.getElementById('nav'); if(route==='ruang-kendali-dashboard'){el.innerHTML='<button class="btn danger" onclick="hrLogout()">⎋ Keluar Ruang Kendali</button>';return} if(route==='login'||route==='ruang-kendali') {el.innerHTML='<button onclick="go(\'beranda\')">← Kembali ke HRFlow</button><button onclick="go(\'panduan\')">Panduan</button>';return;} el.innerHTML=navItems.map(([r,n])=>`<button class="${route===r?'active':''}" onclick="go('${r}')">${n}</button>`).join('')+'<button onclick="empLogout()">Keluar</button>'}
+function renderNav(){const el=document.getElementById('nav'); if(route==='ruang-kendali-dashboard'){el.innerHTML='<button class="btn danger" onclick="hrLogout()">⎋ Keluar Ruang Kendali</button>';return} if(route==='login'||route==='ruang-kendali') {el.innerHTML='<button onclick="go(\'beranda\')">← Kembali ke HRFlow</button><button onclick="go(\'panduan\')">Panduan</button>';return;} el.innerHTML=navItems.map(([r,n])=>`<button class="${route===r?'active':''}" onclick="go('${r}')">${n}${r==='surat'?skBadge():''}</button>`).join('')+'<button onclick="empLogout()">Keluar</button>'}
 function title(t,s,extra=''){return `<div class="page-title"><div><h1>${t}</h1><p>${s}</p></div>${extra}</div>`}
-function render(){if(!loggedIn&&!hrLogged&&route!=='login'&&route!=='panduan'&&route.indexOf('ruang-kendali')!==0)route='login';renderNav();const main=document.getElementById('main');if(route==='login'){main.innerHTML=loginPage(false);wireLogin();return}if(route==='ruang-kendali-dashboard'){renderHrDashboard();return}if(route==='ruang-kendali'){if(hrLogged){renderHrDashboard();return}main.innerHTML=loginPage(true);wireLogin();return}if(route==='ajukan-cuti'||route==='ajukan-lembur'){formType=route==='ajukan-cuti'?'cuti':'lembur';main.innerHTML=formPage();wireForm();return}if(route==='beranda'){main.innerHTML=homePage();return}if(route==='status'){main.innerHTML=statusPage();return}if(route==='kalender-tim'){main.innerHTML=calendarPage();return}if(route==='panduan'){main.innerHTML=guidePage();return}main.innerHTML=homePage()}
+function render(){if(!loggedIn&&!hrLogged&&route!=='login'&&route!=='panduan'&&route.indexOf('ruang-kendali')!==0)route='login';renderNav();const main=document.getElementById('main');if(route==='surat'){main.innerHTML=suratPage();return}if(route==='login'){main.innerHTML=loginPage(false);wireLogin();return}if(route==='ruang-kendali-dashboard'){renderHrDashboard();return}if(route==='ruang-kendali'){if(hrLogged){renderHrDashboard();return}main.innerHTML=loginPage(true);wireLogin();return}if(route==='ajukan-cuti'||route==='ajukan-lembur'){formType=route==='ajukan-cuti'?'cuti':'lembur';main.innerHTML=formPage();wireForm();return}if(route==='beranda'){main.innerHTML=homePage();return}if(route==='status'){main.innerHTML=statusPage();return}if(route==='kalender-tim'){main.innerHTML=calendarPage();return}if(route==='panduan'){main.innerHTML=guidePage();return}main.innerHTML=homePage()}
 function homePage(){return `<section class="hero"><div><div class="eyebrow">✦ PORTAL KEPEGAWAIAN DIGITAL</div><h1>Urus izin kerja,<br><span>lebih mengalir.</span></h1><p>Selamat datang, <b>${esc(demoUser.nama||('NIM '+demoUser.nik))}</b>! Kelola pengajuan cuti dan lembur dalam satu tempat. Ajukan dengan mudah, pantau statusnya, dan tetap terhubung dengan tim.</p><div class="hero-actions"><button class="btn primary" onclick="go('ajukan-cuti')">＋ Ajukan Cuti</button><button class="btn teal" onclick="go('ajukan-lembur')">＋ Ajukan Lembur</button></div></div><div class="hero-art"><div class="sticker">APPROVAL MADE SIMPLE</div><img src="${LOGO}" alt="Ilustrasi logo HRFlow"><div class="pill">✓ Alur pengajuan praktis</div></div></section><div class="stats"><div class="stat"><strong>${demoUser.sisa} hari</strong><span>Sisa cuti tahunan</span></div><div class="stat"><strong>${mine().filter(x=>x.status==='Diproses').length}</strong><span>Pengajuan diproses</span></div><div class="stat"><strong>${mine().length}</strong><span>Total pengajuan</span></div></div><div class="section-head"><div><h2>Mau mengajukan apa?</h2><p>Pilih formulir sesuai kebutuhanmu.</p></div><span class="tag green">● Portal Karyawan</span></div><div class="cards"><article class="action-card blue"><div class="bigicon">📅</div><div><h3>Pengajuan Cuti</h3><p>Rencanakan waktu istirahat dengan pengajuan yang jelas dan terdokumentasi.</p><button class="btn primary" onclick="go('ajukan-cuti')">Mulai pengajuan →</button></div></article><article class="action-card teal"><div class="bigicon">⏱️</div><div><h3>Persetujuan Lembur</h3><p>Catat jam dan pekerjaan lembur, lalu kirim untuk ditinjau atasan.</p><button class="btn teal" onclick="go('ajukan-lembur')">Mulai pengajuan →</button></div></article></div><div class="section-head"><div><h2>Aktivitas terbaru</h2><p>Pembaruan dari pengajuanmu.</p></div><button class="btn soft" onclick="go('status')">Lihat semua</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>ID Pengajuan</th><th>Jenis</th><th>Tanggal</th><th>Status</th></tr></thead><tbody>${mine().slice(0,3).map(r=>`<tr><td><b>${r.id}</b></td><td>${r.type}</td><td>${r.date}</td><td><span class="tag ${r.status==='Disetujui'?'green':r.status==='Ditolak'?'red':'yellow'}">${r.status}</span></td></tr>`).join('')}</tbody></table></div></div>`}
 function loginPage(hr){return `<section class="page"><div class="panel login-layout"><img class="login-logo" src="${LOGO}" alt="HRFlow"><h1>${hr?'Ruang Kendali':'Selamat Datang'}</h1><p>${hr?'Area khusus HRD · Akses terbatas':'Masuk ke portal karyawan PT Global Office Solution'}</p>${hr?'<div class="notice">🔐 Area khusus HRD. Akses dibatasi dan setiap percobaan masuk dicatat.</div>':''}<form id="loginForm"><div class="field"><label>${hr?'Email / ID HRD':'NIM / NIK'}</label><input id="nik" required placeholder="${hr?(CLOUD?'Email HRD':'Masukkan ID HRD'):'Masukkan NIM / NIK-mu'}" value=""></div><div class="field" style="margin-top:14px"><label>Password</label><input id="password" type="password" required placeholder="Masukkan password" value=""></div><div class="hint" style="margin-top:10px">${hr?'<label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="showPw"> Tampilkan password</label>Maksimal 5 kali salah, lalu terkunci 5 menit.':'Masukkan NIM / NIK-mu. Password bebas diisi.'}</div><button class="btn primary" style="width:100%;margin-top:18px" type="submit">${hr?'Masuk ke Ruang Kendali →':'Masuk ke HRFlow →'}</button></form><p style="font-size:12px;margin-top:18px">${hr?'':'Belum memahami alur?'} ${hr?'':'<a href="#" onclick="event.preventDefault();go(\'panduan\')">Buka Panduan Pengisian</a>'}</p></div></section>`}
-function formPage(){let names=['Data Diri','Jenis Pengajuan','Tanggal/Jam','Alasan','Bukti & TTD'];let body='';if(step===0)body=`<div class="field-grid"><div class="field"><label>NIM / NIK</label><input id="fNik" required maxlength="30" value="${esc(demoUser.nik)}"></div><div class="field"><label>Nama Lengkap</label><input id="fNama" required maxlength="60" placeholder="Tulis nama lengkapmu" value="${esc(demoUser.nama)}"></div><div class="field full"><label>Divisi</label><input id="fDivisi" required maxlength="40" list="divList" placeholder="Pilih atau ketik divisi" value="${esc(demoUser.divisi)}"><datalist id="divList"><option value="HRD"><option value="Public Relations (Humas)"><option value="Procurement"><option value="Finance"><option value="Produksi"><option value="Gudang"></datalist></div></div>`;if(step===1)body=formType==='cuti'?`<div class="field"><label>Jenis Cuti</label><select id="leaveType"><option>Cuti Tahunan</option><option>Cuti Sakit</option><option>Cuti Melahirkan</option><option>Cuti Penting</option><option>Lainnya</option></select></div>`:`<div class="field"><label>Kategori</label><select id="otType"><option>Lembur hari kerja</option><option>Lembur akhir pekan</option><option>Lembur hari libur</option></select></div>`;if(step===2)body=formType==='cuti'?`<div class="field-grid"><div class="field"><label>Tanggal mulai</label><input id="startDate" type="date" required></div><div class="field"><label>Tanggal selesai</label><input id="endDate" type="date" required></div><div class="field full"><label>Estimasi hari kerja</label><input id="totalDays" readonly placeholder="Pilih tanggal mulai dan selesai"><span class="hint">Perhitungan demo tidak memasukkan kalender hari libur nasional secara otomatis.</span></div></div>`:`<div class="field-grid"><div class="field"><label>Tanggal lembur</label><input id="otDate" type="date" required></div><div class="field"><label>Jam mulai</label><input id="startTime" type="time" value="17:00" required></div><div class="field"><label>Jam selesai</label><input id="endTime" type="time" value="19:00" required></div><div class="field"><label>Total jam lembur</label><input id="totalHours" readonly value="2 jam 0 menit"></div></div>`;if(step===3)body=`<div class="field"><label>${formType==='cuti'?'Alasan pengajuan':'Deskripsi pekerjaan lembur'}</label><textarea id="reason" required placeholder="Jelaskan alasan atau pekerjaan secara singkat dan jelas..."></textarea><span class="hint">Gunakan keterangan yang relevan agar proses peninjauan lebih mudah.</span></div>`;if(step===4)body=`<div class="field-grid"><div class="field full"><label>Foto bukti (opsional)</label><input type="file" id="proof" accept="image/png,image/jpeg,image/webp"><span class="hint">Format JPG, PNG, WEBP · maksimal 5 MB. Foto dikompres otomatis lalu dikirim ke HRD.</span><div id="previewProof"></div></div><div class="field full"><label>Tanda tangan digital</label><canvas class="signature" id="signature" aria-label="Area tanda tangan"></canvas><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" id="clearSig">Hapus tanda tangan</button><button class="btn soft" type="button" id="redoSig">Ulangi</button></div><span class="hint">Waktu tanda tangan: ${new Date().toLocaleString('id-ID')} · gambar tanda tangan tidak dikirim ke server pada demo ini.</span></div></div>`;return `<section class="page">${title(formType==='cuti'?'Pengajuan Cuti':'Pengajuan Kerja Lembur',formType==='cuti'?'Lengkapi data untuk mengajukan waktu cuti.':'Catat waktu dan pekerjaan lembur untuk ditinjau.') }<div class="stepper">${names.map((n,i)=>`<div class="step ${i===step?'active':i<step?'done':''}">${i+1}. ${n}</div>`).join('')}</div><div class="progress"><span style="width:${(step+1)/names.length*100}%"></span></div><div class="panel"><div class="notice">${step===4?'Periksa kembali data sebelum mengirim. Ini merupakan prototipe, bukan pengajuan resmi.':'Langkah '+(step+1)+' dari '+names.length+' · Data profil ditampilkan sebagai data demo.'}</div><form id="requestForm"><h3>${names[step]}</h3>${body}<div class="form-actions"><button class="btn soft" type="button" id="backBtn" ${step===0?'disabled':''}>← Sebelumnya</button><button class="btn primary" type="button" id="nextBtn">${step===4?'Kirim pengajuan demo':'Lanjut →'}</button></div></form></div></section>`}
+function formPage(){let names=['Data Diri','Jenis Pengajuan','Tanggal/Jam','Alasan','Bukti & TTD'];let body='';if(step===0)body=`<div class="field-grid"><div class="field"><label>NIM / NIK</label><input id="fNik" required maxlength="30" value="${esc(demoUser.nik)}"></div><div class="field"><label>Nama Lengkap</label><input id="fNama" required maxlength="60" placeholder="Tulis nama lengkapmu" value="${esc(demoUser.nama)}"></div><div class="field full"><label>Divisi</label><input id="fDivisi" required maxlength="40" list="divList" placeholder="Pilih atau ketik divisi" value="${esc(demoUser.divisi)}"><datalist id="divList"><option value="HRD"><option value="Public Relations (Humas)"><option value="Procurement"><option value="Finance"><option value="Produksi"><option value="Gudang"></datalist></div></div>`;if(step===1)body=formType==='cuti'?`<div class="field"><label>Jenis Cuti</label><select id="leaveType"><option>Cuti Tahunan</option><option>Cuti Sakit</option><option>Cuti Melahirkan</option><option>Cuti Penting</option><option>Lainnya</option></select></div>`:`<div class="field"><label>Kategori</label><select id="otType"><option>Lembur hari kerja</option><option>Lembur akhir pekan</option><option>Lembur hari libur</option></select></div>`;if(step===2)body=formType==='cuti'?`<div class="field-grid"><div class="field"><label>Tanggal mulai</label><input id="startDate" type="date" required></div><div class="field"><label>Tanggal selesai</label><input id="endDate" type="date" required></div><div class="field full"><label>Estimasi hari kerja</label><input id="totalDays" readonly placeholder="Pilih tanggal mulai dan selesai"><span class="hint">Perhitungan demo tidak memasukkan kalender hari libur nasional secara otomatis.</span></div></div>`:`<div class="field-grid"><div class="field"><label>Tanggal lembur</label><input id="otDate" type="date" required></div><div class="field"><label>Jam mulai</label><input id="startTime" type="time" value="17:00" required></div><div class="field"><label>Jam selesai</label><input id="endTime" type="time" value="19:00" required></div><div class="field"><label>Total jam lembur</label><input id="totalHours" readonly value="2 jam 0 menit"></div></div>`;if(step===3)body=`<div class="field"><label>${formType==='cuti'?'Alasan pengajuan':'Deskripsi pekerjaan lembur'}</label><textarea id="reason" required placeholder="Jelaskan alasan atau pekerjaan secara singkat dan jelas..."></textarea><span class="hint">Gunakan keterangan yang relevan agar proses peninjauan lebih mudah.</span></div>`;if(step===4)body=`<div class="field-grid"><div class="field full"><label>Foto bukti (opsional)</label><input type="file" id="proof" accept="image/png,image/jpeg,image/webp"><span class="hint">Format JPG, PNG, WEBP · maksimal 5 MB. Foto dikompres otomatis lalu dikirim ke HRD.</span><div id="previewProof"></div></div><div class="field full"><label>Tanda tangan digital</label><canvas class="signature" id="signature" aria-label="Area tanda tangan"></canvas><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" id="clearSig">Hapus tanda tangan</button><button class="btn soft" type="button" id="redoSig">Ulangi</button></div><span class="hint">Waktu tanda tangan: ${new Date().toLocaleString('id-ID')} · tanda tangan dikirim bersama pengajuan dan terkunci setelah dikirim.</span></div><div class="field full"><label class="consent-box"><input type="checkbox" id="agree" required><span>${consentText()}</span></label></div></div>`;return `<section class="page">${title(formType==='cuti'?'Pengajuan Cuti':'Pengajuan Kerja Lembur',formType==='cuti'?'Lengkapi data untuk mengajukan waktu cuti.':'Catat waktu dan pekerjaan lembur untuk ditinjau.') }<div class="stepper">${names.map((n,i)=>`<div class="step ${i===step?'active':i<step?'done':''}">${i+1}. ${n}</div>`).join('')}</div><div class="progress"><span style="width:${(step+1)/names.length*100}%"></span></div><div class="panel"><div class="notice">${step===4?'Periksa kembali data sebelum mengirim. Ini merupakan prototipe, bukan pengajuan resmi.':'Langkah '+(step+1)+' dari '+names.length+' · Data profil ditampilkan sebagai data demo.'}</div><form id="requestForm"><h3>${names[step]}</h3>${body}<div class="form-actions"><button class="btn soft" type="button" id="backBtn" ${step===0?'disabled':''}>← Sebelumnya</button><button class="btn primary" type="button" id="nextBtn">${step===4?'Kirim pengajuan demo':'Lanjut →'}</button></div></form></div></section>`}
 function wireForm(){const start=document.getElementById('startDate'),end=document.getElementById('endDate');function days(){if(!start||!end||!start.value||!end.value)return;let a=new Date(start.value+'T12:00:00'),b=new Date(end.value+'T12:00:00');if(b<a){document.getElementById('totalDays').value='Tanggal selesai sebelum tanggal mulai';return}let n=0;for(let d=new Date(a);d<=b;d.setDate(d.getDate()+1)){if(d.getDay()!==0&&d.getDay()!==6)n++}document.getElementById('totalDays').value=n+' hari kerja (estimasi)'}if(start){start.addEventListener('change',days);end.addEventListener('change',days)}const st=document.getElementById('startTime'),et=document.getElementById('endTime');function hours(){if(!st||!et)return;let [sh,sm]=st.value.split(':').map(Number),[eh,em]=et.value.split(':').map(Number);let m=eh*60+em-(sh*60+sm);if(m<0)m+=1440;document.getElementById('totalHours').value=Math.floor(m/60)+' jam '+m%60+' menit'}if(st){st.addEventListener('change',hours);et.addEventListener('change',hours)}restoreDraft();days();hours();document.getElementById('backBtn').onclick=()=>{collect();if(step>0){step--;render()}};document.getElementById('nextBtn').onclick=()=>{if(step<4){let required=document.querySelectorAll('#requestForm [required]');for(let x of required){if(!x.value){x.reportValidity();return}}if(formType==='cuti'&&step===2&&document.getElementById('endDate').value<document.getElementById('startDate').value){toast('Tanggal selesai tidak boleh sebelum tanggal mulai.');return}collect();step++;render();if(step===4)wireSignature();return}submitRequest()}}
 function wireSignature(){const c=document.getElementById('signature');if(!c)return;let ctx=c.getContext('2d'),drawing=false,has=false;function resize(){let r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;let old=has?c.toDataURL():null;c.width=r.width*dpr;c.height=150*dpr;ctx.scale(dpr,dpr);ctx.lineWidth=2.6;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#12263f';if(old){let img=new Image();img.onload=()=>ctx.drawImage(img,0,0,r.width,150);img.src=old}}resize();function pos(e){let r=c.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]}c.onpointerdown=e=>{drawing=true;has=true;c.setPointerCapture(e.pointerId);let [x,y]=pos(e);ctx.beginPath();ctx.moveTo(x,y)};c.onpointermove=e=>{if(!drawing)return;let [x,y]=pos(e);ctx.lineTo(x,y);ctx.stroke()};c.onpointerup=()=>drawing=false;c.onpointercancel=()=>drawing=false;document.getElementById('clearSig').onclick=()=>{ctx.clearRect(0,0,c.width,c.height);has=false};document.getElementById('redoSig').onclick=()=>{ctx.clearRect(0,0,c.width,c.height);has=false;toast('Silakan tanda tangan ulang.')};let proof=document.getElementById('proof');proof.onchange=()=>{let f=proof.files[0],out=document.getElementById('previewProof');if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>5*1024*1024){proof.value='';out.innerHTML='<span class="tag red">File tidak valid atau lebih dari 5 MB.</span>';return}let u=URL.createObjectURL(f);out.innerHTML=`<img src="${u}" alt="Pratinjau bukti" style="margin-top:10px;max-width:180px;max-height:140px;border:2px solid #000;border-radius:7px;object-fit:cover"><div class="hint">${f.name} · ${(f.size/1024/1024).toFixed(2)} MB</div>`}}
 function statusPage(){return `<section class="page">${title('Status Pengajuan','Pantau perjalanan pengajuan dan lihat riwayatmu.')}<div class="panel"><h3>Pelacakan status</h3>${trackHtml()}<p class="hint">Status mengikuti keputusan HRD. Data demo tersimpan di browser perangkat ini.</p></div><div class="panel"><h3>Riwayat pengajuan</h3><div class="table-wrap"><table><thead><tr><th>ID</th><th>Jenis</th><th>Tanggal / Jam</th><th>Dikirim</th><th>Status</th><th>Catatan HRD</th></tr></thead><tbody>${mine().map(r=>`<tr><td><b>${r.id}</b></td><td>${r.type}</td><td>${r.date}</td><td>${r.submitted}</td><td><span class="tag ${r.status==='Disetujui'?'green':r.status==='Ditolak'?'red':'yellow'}">${r.status}</span></td><td>${r.note?esc(r.note):'—'}</td></tr>`).join('')}</tbody></table></div></div></section>`}
@@ -64,7 +64,7 @@ const cloud={uid:null};
 let hrUnsubs=[],empUnsubs=[],hrLastWrite=null;
 let calY=new Date().getFullYear(),calM=new Date().getMonth(),calSel='',calData=[];const calSynced=new Set();
 if(FIREBASE_CONFIG.apiKey&&!window.firebase){setTimeout(()=>toast('Server tidak terjangkau. Berjalan dalam mode lokal.'),1500)}
-function refreshEmp(){if(!hrLogged&&(route==='beranda'||route==='status'||route==='kalender-tim'))render()}
+function refreshEmp(){if(hrLogged)return;if(route==='beranda'||route==='status'||route==='kalender-tim'||route==='surat')render();else if(loggedIn&&route.indexOf('ruang-kendali')!==0)renderNav();skCheck()}
 function refreshHr(){if(!hrLogged||route!=='ruang-kendali-dashboard')return;if(document.querySelector('.modal-bg'))return;const a=document.activeElement;if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return;renderHrDashboard()}
 function applyEmployees(snap){snap.forEach(d=>{const e=employees.find(x=>x.nik===d.id);if(e){const v=d.data();if(typeof v.sisa==='number')e.sisa=v.sisa;if(typeof v.aktif==='boolean')e.aktif=v.aktif}})}
 function attachEmployee(){
@@ -150,11 +150,12 @@ function restoreDraft(){Object.keys(draft).forEach(k=>{const el=document.getElem
 function sigDrawn(){const c=document.getElementById('signature');if(!c)return false;const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;for(let i=3;i<d.length;i+=4){if(d[i])return true}return false}
 async function submitRequest(){
  if(!demoUser.aktif){toast('Akunmu dinonaktifkan oleh HRD. Silakan hubungi HRD.');return}
+ const ag=document.getElementById('agree');if(!ag||!ag.checked){toast('Centang pernyataan persetujuan terlebih dahulu.');if(ag)ag.focus();return}
  if(!sigDrawn()){toast('Mohon bubuhkan tanda tangan digital terlebih dahulu.');return}
  collect();const d=draft,cuti=formType==='cuti',now=new Date(),pf=document.getElementById('proof');
  const hm=(d.totalHours||'').match(/(\d+)\s*jam\s*(\d+)/);
  if(!(d.fNama||demoUser.nama||'').trim()){toast('Isi nama lengkap di langkah Data Diri.');return}
- const r={id:'HF-'+String(Date.now()).slice(-5)+Math.floor(Math.random()*10),nik:(d.fNik||demoUser.nik).trim(),nama:(d.fNama||demoUser.nama||'').trim(),divisi:(d.fDivisi||demoUser.divisi||'').trim()||'-',by:demoUser.nik,kind:formType,
+ const r={id:'HF-'+String(Date.now()).slice(-5)+Math.floor(Math.random()*10),nik:(d.fNik||demoUser.nik).trim(),nama:(d.fNama||demoUser.nama||'').trim(),divisi:(d.fDivisi||demoUser.divisi||'').trim()||'-',by:demoUser.nik,consent:true,consentAt:new Date().toISOString(),kind:formType,
   type:cuti?(d.leaveType||'Cuti Tahunan'):'Lembur',sub:cuti?'':(d.otType||''),
   date:cuti?dmy(d.startDate)+' – '+dmy(d.endDate):dmy(d.otDate)+' · '+(d.startTime||'').replace(':','.')+'–'+(d.endTime||'').replace(':','.'),
   from:cuti?d.startDate:d.otDate,to:cuti?d.endDate:d.otDate,at:now.toISOString(),submitted:now.toLocaleDateString('id-ID'),
@@ -169,7 +170,7 @@ async function submitRequest(){
   cloud.db.collection('requests').doc(r.id).set(r).catch(err=>toast('Gagal mengirim: '+(err.code||err.message)))}
  else{requests.unshift(r);saveData()}
  if(demoUser.guest){demoUser.nama=r.nama;demoUser.divisi=r.divisi;saveMe()}
- logAct('Mengirim pengajuan '+r.type+' ('+r.id+')');draft={};step=0;go('status');
+ logAct('Mengirim pengajuan '+r.type+' ('+r.id+')');draft={};step=0;go('status');mascotCelebrate();
  toast('Pengajuan terkirim ke antrean HRD. Pantau statusnya di halaman ini.');
 }
 function trackHtml(){const m=mine().slice().sort((a,b)=>b.at.localeCompare(a.at))[0];const s=m?m.status:'';
@@ -227,7 +228,7 @@ function wireLogin(){
   if(!nik){toast('Isi NIM / NIK terlebih dahulu.');return}
   let emp=employees.find(x=>x.nik===nik);if(!emp)emp=makeGuest(nik,'','');
   if(!emp.aktif){toast('Akun dinonaktifkan. Hubungi HRD.');return}
-  demoUser=emp;loggedIn=true;saveMe();logAct('Masuk ke portal');go('beranda');toast('Selamat datang, '+(emp.nama||'NIM '+nik)+'.')});
+  demoUser=emp;loggedIn=true;saveMe();logAct('Masuk ke portal');go('beranda');toast('Selamat datang, '+(emp.nama||'NIM '+nik)+'.');setTimeout(skCheck,700)});
 }
 function routeFromHash(){if(location.hash==='#ruang-kendali'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}go('ruang-kendali')}}
 window.addEventListener('hashchange',routeFromHash);
@@ -270,7 +271,7 @@ function showDetail(id){
  const r=requests.find(x=>x.id===id);if(!r)return;
  const kv=(k,v)=>`<div class="kv"><b>${k}</b><span>${v}</span></div>`;
  const bg=document.createElement('div');bg.className='modal-bg';bg.onclick=ev=>{if(ev.target===bg)bg.remove()};
- bg.innerHTML=`<div class="modal" role="dialog" aria-label="Detail pengajuan"><h3>Detail ${esc(r.id)}</h3>${kv('Karyawan',esc(r.nama)+' ('+esc(r.nik)+')')}${kv('Divisi',esc(r.divisi))}${kv('Jenis',esc(r.type)+(r.sub?' · '+esc(r.sub):''))}${kv('Tanggal / Jam',esc(r.date))}${kv('Total',esc(totalStr(r)))}${kv('Alasan / Pekerjaan',esc(r.reason))}${kv('Diisi pada',tglS(r.at)+' pukul '+jamS(r.at))}${kv('Foto bukti',(r.proofUrl||r.proofImg)?'<img class="proofimg" alt="Foto bukti" referrerpolicy="no-referrer" src="'+esc(r.proofUrl||r.proofImg)+'" onclick="viewImg(this.src)"><div class="hint">'+esc(r.proofName||'')+'</div>'+(r.proofUrl?'<a class="hint" href="'+esc(r.proofUrl)+'" target="_blank" rel="noopener">Buka foto di tab baru</a>':'<a class="hint" href="'+r.proofImg+'" download="bukti-'+esc(r.id)+'.jpg">⬇ Unduh foto</a>')+' · <span class="hint">klik gambar untuk memperbesar</span>':(r.proof?'Dilampirkan, tetapi gambar tidak tersimpan (data contoh)':'Tidak dilampirkan'))}${kv('Status',statTag(r.status))}${r.note?kv('Catatan HRD',esc(r.note)):''}${r.decidedAt?kv('Diputuskan',tglS(r.decidedAt)+' '+jamS(r.decidedAt)+' oleh '+esc(r.decidedBy||'-')):''}<div style="margin-top:12px"><b style="font-size:14px">Tanda tangan digital</b><div style="margin-top:6px">${r.sig?'<img class="sigimg" alt="Tanda tangan" src="'+r.sig+'">':'<span class="hint">Tidak tersedia (data contoh).</span>'}</div></div><div style="margin-top:16px;text-align:right"><button class="btn primary" id="closeModal">Tutup</button></div></div>`;
+ bg.innerHTML=`<div class="modal" role="dialog" aria-label="Detail pengajuan"><h3>Detail ${esc(r.id)}</h3>${kv('Karyawan',esc(r.nama)+' ('+esc(r.nik)+')')}${kv('Divisi',esc(r.divisi))}${kv('Jenis',esc(r.type)+(r.sub?' · '+esc(r.sub):''))}${kv('Tanggal / Jam',esc(r.date))}${kv('Total',esc(totalStr(r)))}${kv('Alasan / Pekerjaan',esc(r.reason))}${kv('Diisi pada',tglS(r.at)+' pukul '+jamS(r.at))}${kv('Foto bukti',(r.proofUrl||r.proofImg)?'<img class="proofimg" alt="Foto bukti" referrerpolicy="no-referrer" src="'+esc(r.proofUrl||r.proofImg)+'" onclick="viewImg(this.src)"><div class="hint">'+esc(r.proofName||'')+'</div>'+(r.proofUrl?'<a class="hint" href="'+esc(r.proofUrl)+'" target="_blank" rel="noopener">Buka foto di tab baru</a>':'<a class="hint" href="'+r.proofImg+'" download="bukti-'+esc(r.id)+'.jpg">⬇ Unduh foto</a>')+' · <span class="hint">klik gambar untuk memperbesar</span>':(r.proof?'Dilampirkan, tetapi gambar tidak tersimpan (data contoh)':'Tidak dilampirkan'))}${r.consent?kv('Pernyataan','Pemohon menyatakan data benar ('+tglS(r.consentAt||r.at)+')'):''}${kv('Status',statTag(r.status))}${r.note?kv('Catatan HRD',esc(r.note)):''}${r.decidedAt?kv('Diputuskan',tglS(r.decidedAt)+' '+jamS(r.decidedAt)+' oleh '+esc(r.decidedBy||'-')):''}<div style="margin-top:12px"><b style="font-size:14px">Tanda tangan digital</b><div style="margin-top:6px">${r.sig?'<img class="sigimg" alt="Tanda tangan" src="'+r.sig+'">':'<span class="hint">Tidak tersedia (data contoh).</span>'}</div></div><div style="margin-top:16px;text-align:right"><button class="btn primary" id="closeModal">Tutup</button></div></div>`;
  document.body.appendChild(bg);bg.querySelector('#closeModal').onclick=()=>bg.remove();
  const im=bg.querySelector('.proofimg');
  if(im&&r.proofUrl)im.onerror=()=>{im.onerror=null;if(r.proofImg){im.src=r.proofImg;const h=document.createElement('div');h.className='hint';h.textContent='Versi ringkas ditampilkan karena ImgBB tidak bisa dibuka dari jaringan ini.';im.after(h)}else{im.outerHTML='<span class="tag red">Foto tidak bisa dimuat. Jaringan mungkin memblokir i.ibb.co. Coba ganti DNS/VPN.</span>'}};
@@ -370,7 +371,160 @@ function saveMe(){try{localStorage.setItem('hrflow_me',JSON.stringify({nik:demoU
 function empLogout(){loggedIn=false;demoUser=employees[0];try{localStorage.removeItem('hrflow_me')}catch(e){}go('login')}
 initCloud();
 
-if(!loggedIn)route='login';render();routeFromHash();
+
+/* ================= PERNYATAAN PERSETUJUAN FORMULIR ================= */
+function consentText(){
+ return formType==='cuti'
+  ?'Saya menyatakan bahwa seluruh data pada formulir pengajuan cuti ini benar dan dapat dipertanggungjawabkan, bukti yang dilampirkan asli, serta saya bersedia menerima konsekuensi sesuai ketentuan perusahaan apabila terdapat data yang tidak benar. Saya menyetujui data ini diproses oleh HRD PT Global Office Solution.'
+  :'Saya menyatakan bahwa seluruh data pada formulir lembur ini benar, pekerjaan lembur dilakukan atas sepengetahuan atasan, bukti yang dilampirkan asli, serta saya bersedia menerima konsekuensi sesuai ketentuan perusahaan apabila terdapat data yang tidak benar. Saya menyetujui data ini diproses oleh HRD PT Global Office Solution.';
+}
+
+/* ================= SURAT PEMBERITAHUAN HRD (untuk seluruh karyawan) ================= */
+const SURAT_TANGGAL='11 November 2026';
+const SP_LIST=[{id:'SP-001',judul:'Pemberitahuan Tata Cara Pengajuan Cuti dan Kerja Lembur',nomor:'001/HRD-GOS/XI/2026',tanggal:SURAT_TANGGAL,
+ ringkas:'Cara mengajukan cuti dan kerja lembur secara digital lewat HRFlow, alur persetujuan, dan ketentuan yang perlu diperhatikan.'}];
+function spKey(){return 'hrflow_sp_seen_'+demoUser.nik}
+function spSeen(){try{return JSON.parse(localStorage.getItem(spKey()))||[]}catch(e){return[]}}
+function spMark(ids){try{const s=new Set(spSeen());ids.forEach(i=>s.add(i));localStorage.setItem(spKey(),JSON.stringify([...s]))}catch(e){}}
+function spUnseen(){const s=new Set(spSeen());return SP_LIST.filter(x=>!s.has(x.id))}
+function skBadge(){const n=spUnseen().length;return n?' <span class="badge">'+n+'</span>':''}
+function spHtml(x,auto){
+ const url=location.href.split('#')[0].split('?')[0];
+ const css=`body{margin:0;background:#e8eef5;font-family:'Times New Roman',serif;color:#111}
+.bar{position:sticky;top:0;background:#12263f;color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font:600 14px Arial,sans-serif}
+.bar button{border:3px solid #000;background:#7cc4f5;color:#12263f;font-weight:800;padding:8px 14px;border-radius:8px;box-shadow:3px 3px 0 #000;cursor:pointer}
+.paper{background:#fff;max-width:800px;margin:20px auto;padding:48px 56px;border:1px solid #bbb;box-shadow:0 4px 18px rgba(0,0,0,.15);line-height:1.6;font-size:15px}
+.head{text-align:center;border-bottom:4px double #111;padding-bottom:10px;margin-bottom:16px}.head b{display:block;font-size:20px;letter-spacing:1px}.head span{font-size:12px}
+.meta{border-collapse:collapse;margin-bottom:12px}.meta td{padding:1px 10px 1px 0;vertical-align:top}
+p{margin:8px 0}h3{font-size:15px;margin:16px 0 4px}ol,ul{margin:4px 0;padding-left:24px}li{margin:2px 0}
+.sign{margin-top:26px;display:flex;justify-content:flex-end}.sign>div{text-align:center;min-width:240px}
+.stamp{display:inline-flex;align-items:center;justify-content:center;width:84px;height:84px;border:3px solid #1b4f9c;color:#1b4f9c;border-radius:50%;font:800 11px Arial,sans-serif;letter-spacing:.5px;transform:rotate(-10deg);margin:8px 0;text-align:center;line-height:1.3;opacity:.8}
+a{color:#1b4f9c}
+@media print{.no-print{display:none}body{background:#fff}.paper{border:0;box-shadow:none;margin:0;padding:0;max-width:none}@page{margin:18mm}}
+@media(max-width:600px){.paper{padding:24px 18px;margin:0}.sign{justify-content:center}}`;
+ const li=a=>'<li>'+a+'</li>';
+ return '<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(x.judul)+'</title><style>'+css+'</style></head><body>'
+ +'<div class="bar no-print"><button onclick="window.print()">⬇ Unduh PDF / Cetak</button><span>Di jendela cetak, pilih “Simpan sebagai PDF”.</span></div>'
+ +'<div class="paper"><div class="head"><b>PT GLOBAL OFFICE SOLUTION</b><span>Divisi HRD (Kepegawaian) · Produksi dan Penyediaan Peralatan ATK Kantor</span></div>'
+ +'<table class="meta"><tr><td>Nomor</td><td>: '+esc(x.nomor)+'</td></tr><tr><td>Tanggal</td><td>: '+esc(x.tanggal)+'</td></tr><tr><td>Lampiran</td><td>: -</td></tr><tr><td>Perihal</td><td>: <b>'+esc(x.judul)+'</b></td></tr></table>'
+ +'<p>Kepada Yth.<br><b>Seluruh Karyawan PT Global Office Solution</b><br>di tempat</p>'
+ +'<p>Dengan hormat,</p>'
+ +'<p>Sehubungan dengan upaya mempermudah dan merapikan administrasi kepegawaian, Divisi HRD memberitahukan bahwa pengajuan cuti dan persetujuan kerja lembur kini dilakukan secara digital melalui website <b>HRFlow</b>. Pemberitahuan ini berlaku bagi seluruh karyawan, baik yang akan mengajukan cuti atau lembur maupun yang belum. Adapun penjelasannya sebagai berikut:</p>'
+ +'<h3>A. Akses HRFlow</h3><p>Buka <a href="'+esc(url)+'">'+esc(url)+'</a>, lalu masuk menggunakan NIM/NIK masing-masing.</p>'
+ +'<h3>B. Cara Mengajukan Cuti</h3><ol>'+li('Pilih menu <b>Ajukan Cuti</b>.')+li('Periksa data diri (NIM/NIK, nama, dan divisi), ubah bila belum sesuai.')+li('Pilih jenis cuti yang diajukan.')+li('Tentukan tanggal mulai dan tanggal selesai. Jumlah hari kerja dihitung otomatis.')+li('Tulis alasan pengajuan dan lampirkan foto bukti apabila ada, misalnya surat keterangan dokter.')+li('Bubuhkan tanda tangan digital, centang pernyataan persetujuan, lalu klik <b>Kirim</b>.')+'</ol>'
+ +'<h3>C. Cara Mengajukan Kerja Lembur</h3><ol>'+li('Pilih menu <b>Ajukan Lembur</b>.')+li('Periksa data diri dan pilih kategori lembur.')+li('Isi tanggal lembur, jam mulai, dan jam selesai. Total jam dihitung otomatis.')+li('Uraikan pekerjaan yang dilakukan dan lampirkan foto bukti apabila ada.')+li('Bubuhkan tanda tangan digital, centang pernyataan persetujuan, lalu klik <b>Kirim</b>.')+'</ol>'
+ +'<h3>D. Alur Persetujuan dan Ketentuan</h3><ul>'
+ +li('Pengajuan diterima dan ditinjau oleh Divisi HRD. Status dapat dipantau pada menu <b>Status</b> (Diajukan, Diproses, Disetujui atau Ditolak), beserta catatan HRD bila ada.')
+ +li('Ajukan sebelum tanggal pelaksanaan agar pengajuan sempat ditinjau.')
+ +li('Kerja lembur dilaksanakan atas sepengetahuan atasan.')
+ +li('Pengajuan cuti sakit sebaiknya disertai bukti pendukung.')
+ +li('Pengajuan yang sudah disetujui atau ditolak tidak dapat diubah. Apabila ada perubahan rencana, silakan ajukan kembali.')
+ +li('Periksa menu <b>Kalender Tim</b> untuk mengetahui jadwal cuti dan lembur rekan kerja agar tidak berbenturan.')
+ +li('Seluruh data dijaga kerahasiaannya dan hanya dapat diakses oleh pihak yang berwenang.')+'</ul>'
+ +'<h3>E. Bantuan</h3><p>Petunjuk lengkap tersedia pada menu <b>Panduan</b>. Pertanyaan singkat dapat ditanyakan melalui tombol <b>Asisten AI</b> di pojok kanan bawah, atau langsung hubungi Divisi HRD.</p>'
+ +'<p>Demikian pemberitahuan ini kami sampaikan. Atas perhatian dan kerja sama Bapak/Ibu/Saudara, kami ucapkan terima kasih.</p>'
+ +'<div class="sign"><div>Hormat kami,<br>Divisi HRD<br><span class="stamp">HRD<br>PT GOS</span><br><b>PT Global Office Solution</b></div></div></div>'
+ +(auto?'<script>window.onload=function(){setTimeout(function(){window.print()},600)}<\/script>':'')+'</body></html>';
+}
+function spOpen(id,mode){
+ const x=SP_LIST.find(s=>s.id===id);if(!x)return;
+ const w=window.open('','_blank');if(!w){toast('Pop-up diblokir browser. Izinkan pop-up untuk membuka surat.');return}
+ w.document.open();w.document.write(spHtml(x,mode==='pdf'));w.document.close();
+ if(!hrLogged){spMark([id]);renderNav()}
+}
+function suratPage(){
+ const seen=new Set(spSeen());
+ const body='<div class="cards">'+SP_LIST.map(x=>`<article class="panel sk-card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><h3 style="margin:0">${esc(x.judul)}</h3>${seen.has(x.id)?'':'<span class="tag red">BARU</span>'}</div><p class="hint" style="margin:8px 0">Nomor ${esc(x.nomor)} · ${esc(x.tanggal)}</p><p style="margin:0 0 10px">${esc(x.ringkas)}</p><div class="row-actions"><button class="btn teal sm" onclick="spOpen('${x.id}','view')">📄 Lihat di tab baru</button><button class="btn primary sm" onclick="spOpen('${x.id}','pdf')">⬇ Unduh PDF</button></div></article>`).join('')+'</div>';
+ spMark(SP_LIST.map(x=>x.id));setTimeout(renderNav,0);
+ return `<section class="page">${title('Pemberitahuan','Surat pemberitahuan dari Divisi HRD untuk seluruh karyawan.')}${body}</section>`}
+function skCheck(){
+ if(!loggedIn||hrLogged||document.querySelector('.modal-bg'))return;
+ if(route==='login'||route.indexOf('ruang-kendali')===0)return;
+ const un=spUnseen();if(!un.length)return;
+ const pk='hrflow_sppop_'+demoUser.nik;let popped=[];try{popped=JSON.parse(sessionStorage.getItem(pk))||[]}catch(e){}
+ const fresh=un.filter(x=>!popped.includes(x.id));if(!fresh.length)return;
+ try{sessionStorage.setItem(pk,JSON.stringify(popped.concat(fresh.map(x=>x.id))))}catch(e){}
+ const bg=document.createElement('div');bg.className='modal-bg';
+ bg.innerHTML=`<div class="modal sk-pop" role="dialog" aria-label="Surat pemberitahuan baru"><div class="sk-envelope">📨</div><h3>Pemberitahuan Baru dari HRD</h3><p class="hint" style="margin:0 0 12px">Ada surat pemberitahuan untuk seluruh karyawan.</p>${fresh.slice(0,3).map(x=>`<div class="sk-item"><div><b>${esc(x.judul)}</b><br><span class="hint">Nomor ${esc(x.nomor)} · ${esc(x.tanggal)}</span></div><div class="row-actions"><button class="btn teal sm" data-v="${x.id}">📄 Lihat</button><button class="btn primary sm" data-p="${x.id}">⬇ PDF</button></div></div>`).join('')}<div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button class="btn soft" id="skLater">Nanti</button><button class="btn primary" id="skAll">Buka Daftar Surat</button></div></div>`;
+ document.body.appendChild(bg);
+ bg.onclick=e=>{if(e.target===bg)bg.remove()};
+ bg.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{spOpen(b.dataset.v,'view');bg.remove()});
+ bg.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{spOpen(b.dataset.p,'pdf');bg.remove()});
+ bg.querySelector('#skLater').onclick=()=>bg.remove();
+ bg.querySelector('#skAll').onclick=()=>{bg.remove();go('surat')};
+ mascotSay('Ada surat pemberitahuan dari HRD nih! Cek dulu ya 📨','wave',7000);
+}
+
+/* ================= MASKOT FLOWY ================= */
+const REDUCE_MOTION=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+let masTimer=null,masKey='';
+const M_TIPS=['Tanda tangan bisa diulang sebelum dikirim ✍️','Foto bukti bikin pengajuanmu lebih cepat diproses 📸','Cek Kalender Tim biar nggak bentrok sama temanmu 📅','Butuh bantuan? Klik Asisten AI di kanan bawah 💬','Surat pemberitahuan dari HRD ada di menu Pemberitahuan 📄'];
+const M_SVG=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<ellipse class="m-shadow" cx="60" cy="114" rx="30" ry="5" fill="rgba(0,0,0,.22)"/>
+<g class="m-body">
+<line x1="62" y1="44" x2="62" y2="26" stroke="#000" stroke-width="3.5" stroke-linecap="round"/>
+<circle class="m-ant" cx="62" cy="21" r="6.5" fill="#2fb5a8" stroke="#000" stroke-width="3.5"/>
+<g class="m-arm-l"><path d="M19 86 Q7 88 6 99" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><circle cx="6" cy="100" r="5.5" fill="#fff" stroke="#000" stroke-width="3"/></g>
+<g class="m-arm-r"><path d="M104 84 Q116 80 117 69" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round"/><circle cx="117" cy="67" r="5.5" fill="#fff" stroke="#000" stroke-width="3"/></g>
+<path d="M32 108 C6 108 4 78 28 74 C24 44 60 30 72 54 C88 40 116 58 102 78 C122 84 118 108 94 108 Z" fill="#cfe9ff" stroke="#000" stroke-width="3.5" stroke-linejoin="round"/>
+<ellipse cx="36" cy="93" rx="5.5" ry="3.4" fill="#ff9db4" opacity=".85"/><ellipse cx="88" cy="93" rx="5.5" ry="3.4" fill="#ff9db4" opacity=".85"/>
+<g class="m-eyes"><circle cx="50" cy="85" r="5" fill="#12263f"/><circle cx="74" cy="85" r="5" fill="#12263f"/><circle cx="51.8" cy="83.2" r="1.7" fill="#fff"/><circle cx="75.8" cy="83.2" r="1.7" fill="#fff"/></g>
+<g class="m-eyes-happy"><path d="M44 85 Q50 76 56 85" fill="none" stroke="#12263f" stroke-width="3.5" stroke-linecap="round"/><path d="M68 85 Q74 76 80 85" fill="none" stroke="#12263f" stroke-width="3.5" stroke-linecap="round"/></g>
+<path class="m-mouth" d="M56 92 Q62 98 68 92" fill="none" stroke="#12263f" stroke-width="3.2" stroke-linecap="round"/>
+<path class="m-mouth-happy" d="M54 90 Q62 103 70 90 Z" fill="#ff7a90" stroke="#12263f" stroke-width="3" stroke-linejoin="round"/>
+<path class="m-mouth-sad" d="M56 98 Q62 91 68 98" fill="none" stroke="#12263f" stroke-width="3.2" stroke-linecap="round"/>
+</g></svg>`;
+function mascotInit(){
+ if(document.getElementById('mascot'))return;
+ const m=document.createElement('div');m.id='mascot';m.className='mascot';
+ m.innerHTML='<div class="m-char" id="mChar" role="button" tabindex="0" aria-label="Maskot Flowy, klik untuk tips" title="Klik aku!">'+M_SVG+'</div><div class="m-bubble" id="mBubble" role="status" aria-live="polite"><button class="m-x" id="mX" aria-label="Tutup">×</button><span id="mText"></span></div>';
+ document.body.appendChild(m);
+ const hit=()=>{jump();mascotSay(M_TIPS[Math.floor(Math.random()*M_TIPS.length)],'happy',6000)};
+ document.getElementById('mChar').onclick=hit;
+ document.getElementById('mChar').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();hit()}};
+ document.getElementById('mX').onclick=()=>document.getElementById('mBubble').classList.remove('show');
+ setInterval(()=>{if(document.hidden||hrLogged||route.indexOf('ruang-kendali')===0||document.querySelector('.modal-bg'))return;const b=document.getElementById('mBubble');if(b&&!b.classList.contains('show'))mascotSay(M_TIPS[Math.floor(Math.random()*M_TIPS.length)],'',5500)},45000);
+ document.addEventListener('change',e=>{if(e.target&&e.target.id==='agree'&&e.target.checked)mascotSay('Siap! Tinggal klik Kirim 🚀','happy',4000)});
+ mascotOnRender();
+}
+function jump(){const m=document.getElementById('mascot');if(!m||REDUCE_MOTION)return;m.classList.remove('jump');void m.offsetWidth;m.classList.add('jump');setTimeout(()=>m.classList.remove('jump'),650)}
+function mascotSay(text,mood,ms){
+ const m=document.getElementById('mascot'),b=document.getElementById('mBubble'),t=document.getElementById('mText');if(!m||!b||!t)return;
+ t.textContent=text;m.classList.remove('happy','sad','wave');void m.offsetWidth;if(mood)m.classList.add(mood);
+ b.classList.add('show');clearTimeout(masTimer);masTimer=setTimeout(()=>{b.classList.remove('show');m.classList.remove('wave')},ms||6000);
+}
+function mascotLine(){
+ const n=(demoUser.nama||'').split(' ')[0]||'teman';
+ if(hrLogged||route==='ruang-kendali-dashboard'){
+  if(hrTab!=='antrean')return['Semua aktivitas tercatat rapi di sini 🔍',''];
+  const p=requests.filter(r=>r.status==='Diajukan'||r.status==='Diproses').length;
+  return p?['Ada '+p+' pengajuan menunggu keputusanmu 📝','wave']:['Antrean bersih! Kerja bagus ✨','happy']}
+ if(route==='ruang-kendali')return['Area khusus HRD ya 🔒',''];
+ if(route==='login')return['Halo! Aku Flowy 👋 Masukkan NIM-mu untuk mulai.','wave'];
+ if(route==='beranda'){const u=spUnseen().length;return u?['Ada surat pemberitahuan baru dari HRD 📨','wave']:['Hai '+n+'! Mau ajukan cuti atau lembur hari ini?','wave']}
+ if(route==='ajukan-cuti'||route==='ajukan-lembur'){
+  const c=route==='ajukan-cuti';
+  const L=[['Cek dulu data dirimu ya ✍️',''],[c?'Pilih jenis cutimu ya 🗂️':'Pilih kategori lemburnya ya 🗂️',''],[c?'Tanggalnya jangan sampai keliru ya 📅':'Jam mulai dan selesainya yang tepat ya ⏰',''],['Ceritakan singkat dan jelas ya 💬',''],['Terakhir: foto bukti, tanda tangan, dan centang pernyataan ✅','wave']];
+  return L[Math.min(step,4)]}
+ if(route==='status'){const l=mine();
+  if(l.some(r=>r.status==='Disetujui'))return['Ada yang disetujui nih, selamat! 🎉','happy'];
+  if(l.some(r=>r.status==='Ditolak'||r.status==='Perlu Revisi'))return['Cek catatan HRD ya, semangat! 💪',''];
+  return['Sabar ya, HRD sedang meninjau pengajuanmu ⏳','']}
+ if(route==='kalender-tim')return['Klik tanggal untuk lihat siapa yang cuti 📅',''];
+ if(route==='panduan')return['Ikuti langkah ini, gampang kok! 😄','happy'];
+ if(route==='surat')return['Baca surat ini ya, isinya cara ajukan cuti dan lembur 📄',''];
+ return null}
+function mascotOnRender(){
+ if(!document.getElementById('mascot'))return;
+ const k=route+'|'+(route.indexOf('ajukan')===0?step:'')+'|'+(route==='ruang-kendali-dashboard'?hrTab:'');
+ if(k===masKey)return;masKey=k;const l=mascotLine();if(l)mascotSay(l[0],l[1],6500)}
+function mascotCelebrate(){mascotSay('Yeay! Pengajuanmu terkirim 🎉 Tinggal tunggu HRD ya!','happy',6500);jump();confetti()}
+function confetti(){if(REDUCE_MOTION)return;const cols=['#7cc4f5','#2fb5a8','#ffd166','#ff9db4','#12263f'];
+ for(let i=0;i<36;i++){const p=document.createElement('i');p.className='confetti';p.style.cssText='left:'+Math.random()*100+'vw;background:'+cols[i%5]+';animation-delay:'+Math.random()*.4+'s;animation-duration:'+(1.6+Math.random()*1.2)+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),3600)}}
+(function(){const _r=render;render=function(){_r();mascotOnRender()}})();
+(function(){const _h=renderHrDashboard;renderHrDashboard=function(){_h();mascotOnRender()}})();
+
+if(!loggedIn)route='login';render();routeFromHash();mascotInit();skCheck();
 </script><style>
 .hr-tabs{margin:0 0 20px}
 .stats.four{grid-template-columns:repeat(4,1fr)}.stats.four .stat:nth-child(4){background:#d9efff}
@@ -391,4 +545,35 @@ if(!loggedIn)route='login';render();routeFromHash();
 @media(max-width:600px){.bar-row{grid-template-columns:90px 1fr 30px}.kv{grid-template-columns:1fr;gap:2px}}
 .calendar>div{cursor:pointer}.calendar .dayname,.calendar .muted{cursor:default}.calendar .today{outline:3px solid #2fb5a8;outline-offset:-3px;font-weight:900}.calendar .sel{background:#e8f4ff}.calendar .event{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.calendar .more{display:block;margin-top:3px;font-size:10px;font-weight:800;color:#566578}
 .proofimg{max-width:100%;max-height:200px;border:2px solid #000;border-radius:8px;cursor:zoom-in;background:#fff;display:block;margin-bottom:6px}
+</style><style>
+.badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border:2px solid #000;border-radius:99px;background:#ff9db4;color:#12263f;font-size:11px;line-height:15px;text-align:center}
+.consent-box{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:3px solid #000;border-radius:8px;background:#e8f6f3;font-size:14px;line-height:1.55;cursor:pointer;color:#12263f}
+.consent-box input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:#2fb5a8}
+.sk-pop{text-align:left}.sk-envelope{font-size:42px;line-height:1;animation:skBob 1.4s ease-in-out infinite}
+.sk-item{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:10px 0;border-top:2px dashed #b8c7d6;font-size:14px}
+@keyframes skBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+.mascot{position:fixed;left:12px;bottom:12px;z-index:9000;display:flex;align-items:flex-end;gap:2px;pointer-events:none}
+.m-char{width:116px;height:116px;cursor:pointer;pointer-events:auto;animation:mFloat 3.2s ease-in-out infinite;flex:none}
+.m-char svg{width:100%;height:100%;overflow:visible}
+.m-char:focus-visible{outline:3px solid #2fb5a8;border-radius:12px}
+@keyframes mFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.m-eyes{transform-origin:62px 85px;animation:mBlink 4.6s infinite}
+@keyframes mBlink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.m-ant{animation:mAnt 1.6s ease-in-out infinite;transform-origin:62px 28px}
+@keyframes mAnt{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+.m-eyes-happy,.m-mouth-happy,.m-mouth-sad{display:none}
+.mascot.happy .m-eyes,.mascot.happy .m-mouth{display:none}.mascot.happy .m-eyes-happy,.mascot.happy .m-mouth-happy{display:inline}
+.mascot.sad .m-mouth{display:none}.mascot.sad .m-mouth-sad{display:inline}
+.mascot.wave .m-arm-r{animation:mWave .55s ease-in-out 5;transform-origin:104px 84px}
+@keyframes mWave{0%,100%{transform:rotate(0)}50%{transform:rotate(-28deg)}}
+.mascot.jump .m-char{animation:mJump .6s ease-out}
+@keyframes mJump{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-30px) scale(1.07,.95)}70%{transform:translateY(0) scale(.95,1.06)}100%{transform:translateY(0) scale(1)}}
+.m-bubble{pointer-events:auto;position:relative;background:#fff;color:#12263f;border:3px solid #000;border-radius:14px;box-shadow:4px 4px 0 #000;padding:9px 26px 9px 12px;font-size:13px;font-weight:800;line-height:1.4;max-width:230px;margin-bottom:48px;opacity:0;visibility:hidden;transform:scale(.8) translateY(6px);transform-origin:left bottom;transition:opacity .2s,transform .2s,visibility .2s}
+.m-bubble.show{opacity:1;visibility:visible;transform:none}
+.m-bubble::before{content:"";position:absolute;left:-9px;bottom:16px;width:12px;height:12px;background:#fff;border-left:3px solid #000;border-bottom:3px solid #000;transform:rotate(45deg)}
+.m-x{position:absolute;top:2px;right:4px;border:0;background:none;font-size:17px;line-height:1;cursor:pointer;color:#566578;padding:2px 4px}
+.confetti{position:fixed;top:-14px;width:9px;height:14px;border:2px solid #000;z-index:10001;pointer-events:none;animation:cfFall linear forwards}
+@keyframes cfFall{to{transform:translateY(105vh) rotate(540deg)}}
+@media(max-width:700px){.m-char{width:68px;height:68px}.m-bubble{max-width:60vw;font-size:12px;margin-bottom:26px}body{padding-bottom:84px}}
+@media(prefers-reduced-motion:reduce){.m-char,.m-eyes,.m-ant,.sk-envelope,.mascot.wave .m-arm-r,.mascot.jump .m-char{animation:none!important}.m-bubble{transition:none}}
 </style></body></html>
